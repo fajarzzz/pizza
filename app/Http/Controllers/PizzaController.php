@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\PizzaStoreRequest;
+use App\Http\Requests\PizzaUpdateRequest;
 use App\Models\Pizza;
 use Illuminate\Http\Request;
 
@@ -15,7 +16,7 @@ class PizzaController extends Controller
      */
     public function index()
     {
-        $pizzas = Pizza::get();
+        $pizzas = Pizza::paginate(2);
         return view('pizza.index', compact('pizzas'));
     }
 
@@ -26,7 +27,6 @@ class PizzaController extends Controller
      */
     public function create()
     {
-        //
         return view('pizza.create');
     }
 
@@ -70,7 +70,8 @@ class PizzaController extends Controller
      */
     public function edit($id)
     {
-        //
+        $pizza = Pizza::find($id);
+        return view('pizza.edit', compact('pizza'));
     }
 
     /**
@@ -80,9 +81,25 @@ class PizzaController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(PizzaUpdateRequest $request, $id)
     {
-        //
+        $pizza = Pizza::find($id);
+        if($request->has('image')){
+            $path = $request->image->store('public/pizza');
+        } else {
+            $path = $pizza->image;
+        }
+        $data = [
+            'name' => $request->name,
+            'description'=> $request->description,
+            'small_price' => $request->small_price,
+            'medium_price' => $request->medium_price,
+            'large_price' => $request->large_price,
+            'category' => $request->category,
+            'image' => $path
+        ];
+        $pizza->update($data);
+        return redirect()->route('pizza.index')->with('message', 'Pizza update succesfully!');
     }
 
     /**
@@ -93,6 +110,7 @@ class PizzaController extends Controller
      */
     public function destroy($id)
     {
-        //
+        Pizza::find($id)->delete();
+        return redirect()->route('pizza.index')->with('message', 'Pizza delete succesfully!');
     }
 }
